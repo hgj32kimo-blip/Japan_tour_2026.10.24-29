@@ -1,0 +1,2 @@
+# Japan_tour_2026.10.24-29
+Japan_tour_OSAKA_KOBE_USJ_2026.10.24-29
