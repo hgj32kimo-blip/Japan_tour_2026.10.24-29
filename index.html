@@ -1,0 +1,1450 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>關西大阪京都神戶 6天5夜自由行全景導覽地圖</title>
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Serif+TC:wght@600;900&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-cream: #faf7f2;
+      --card-bg: #ffffff;
+      --navy: #1b2a47;
+      --navy-light: #2c416a;
+      --kobe-red: #c94a29;
+      --kobe-red-hover: #a8381c;
+      --gold: #b38a49;
+      --gold-light: #f5eedf;
+      --text-main: #2b2b2b;
+      --text-muted: #696056;
+      --border: #e8e1d5;
+      --border-dark: #d5cbbf;
+      --blue-btn: #2563eb;
+      --guide-btn: #475569;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      min-height: 100%;
+      background-color: var(--bg-cream);
+      color: var(--text-main);
+      font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overflow-x: hidden;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* 頂部刊頭 Header */
+    .header-box {
+      padding: 16px 20px;
+      background: var(--navy);
+      color: #ffffff;
+      border-bottom: 3px solid var(--gold);
+    }
+
+    .header-sub-tag {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .vol-badge {
+      font-family: 'Cinzel', serif;
+      font-size: 11px;
+      letter-spacing: 2px;
+      font-weight: 700;
+      color: #e5cb9b;
+    }
+
+    .time-badge {
+      font-size: 11px;
+      background: rgba(255, 255, 255, 0.15);
+      padding: 3px 10px;
+      border-radius: 12px;
+    }
+
+    .header-title {
+      font-family: 'Noto Serif TC', serif;
+      font-size: 1.35rem;
+      font-weight: 900;
+      margin-bottom: 4px;
+      line-height: 1.3;
+    }
+
+    .header-summary {
+      font-size: 0.82rem;
+      color: #c9d5e8;
+      line-height: 1.45;
+    }
+
+    /* 天數分頁橫向滑動列 */
+    .day-tabs-bar {
+      display: flex;
+      background: #eee7dc;
+      padding: 8px 12px;
+      gap: 6px;
+      overflow-x: auto;
+      white-space: nowrap;
+      border-bottom: 1px solid var(--border-dark);
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .day-tabs-bar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .day-tab-btn {
+      flex: 0 0 auto;
+      padding: 8px 13px;
+      border-radius: 6px;
+      border: 1px solid var(--border-dark);
+      background: #ffffff;
+      color: var(--navy);
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .day-tab-btn.active {
+      background: var(--kobe-red);
+      color: #ffffff;
+      border-color: var(--kobe-red);
+      box-shadow: 0 2px 6px rgba(201, 74, 41, 0.3);
+    }
+
+    /* 交通指南折疊手風琴 */
+    .transit-accordion {
+      background: #f4eee3;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .transit-trigger {
+      width: 100%;
+      padding: 12px 18px;
+      border: none;
+      background: transparent;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      font-size: 0.86rem;
+      font-weight: 700;
+      color: var(--navy);
+    }
+
+    .transit-details {
+      display: none;
+      padding: 12px 18px 16px;
+      background: #fbf9f4;
+      border-top: 1px dashed var(--border-dark);
+      font-size: 0.82rem;
+      color: #4f473e;
+      line-height: 1.6;
+    }
+
+    .transit-details.open {
+      display: block;
+    }
+
+    .transit-route-box {
+      margin-bottom: 10px;
+      padding: 9px 12px;
+      background: #ffffff;
+      border-radius: 6px;
+      border-left: 3.5px solid var(--kobe-red);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+    }
+
+    .transit-route-box:last-child {
+      margin-bottom: 0;
+    }
+
+    .transit-title {
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 3px;
+    }
+
+    /* 頁面主要容器 */
+    #page-container {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      max-width: 1240px;
+      margin: 0 auto;
+    }
+
+    /* 地圖視窗（手機吸頂） */
+    #map-wrapper {
+      position: sticky;
+      top: 0;
+      width: 100%;
+      height: 38vh;
+      min-height: 240px;
+      max-height: 350px;
+      z-index: 500;
+      background: #e5e0d8;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* 地圖圖層切換浮動鈕 */
+    .layer-selector {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 1000;
+      background: rgba(255, 255, 255, 0.94);
+      padding: 3px 6px;
+      border-radius: 16px;
+      border: 1px solid var(--border-dark);
+      display: flex;
+      gap: 4px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+
+    .layer-btn {
+      border: none;
+      background: transparent;
+      padding: 4px 10px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--navy);
+      border-radius: 12px;
+      cursor: pointer;
+    }
+
+    .layer-btn.active {
+      background: var(--navy);
+      color: #ffffff;
+    }
+
+    /* 行程清單卡片容器 */
+    .timeline-container {
+      padding: 16px 16px 50px;
+    }
+
+    .day-overview-card {
+      background: var(--gold-light);
+      border: 1px solid var(--gold);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 14px;
+      font-size: 0.83rem;
+      line-height: 1.5;
+    }
+
+    .trip-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      transition: all 0.2s;
+    }
+
+    .trip-card:active {
+      transform: scale(0.99);
+    }
+
+    .trip-card.active-spot {
+      border-color: var(--kobe-red);
+      border-left: 5px solid var(--kobe-red);
+      background: #fffcf9;
+    }
+
+    .card-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .step-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--navy);
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 800;
+      margin-right: 6px;
+    }
+
+    .step-time {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--kobe-red);
+    }
+
+    .plan-tag {
+      font-size: 10px;
+      background: #f2ebe1;
+      color: #6d5b4a;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    .card-title {
+      font-family: 'Noto Serif TC', serif;
+      font-size: 1.1rem;
+      font-weight: 900;
+      color: var(--navy);
+      margin-bottom: 2px;
+      line-height: 1.35;
+    }
+
+    .card-jp {
+      font-size: 0.8rem;
+      color: var(--gold);
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .card-desc {
+      font-size: 0.84rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+      margin-bottom: 12px;
+    }
+
+    /* 3 篇網路攻略卡片容器 */
+    .guides-box {
+      margin-top: 10px;
+      margin-bottom: 12px;
+      padding: 10px 12px;
+      background: #faf7f2;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+
+    .guides-title {
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: var(--navy);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .guides-list {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .guide-link-item {
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 10px;
+      background: #ffffff;
+      border: 1px solid var(--border-dark);
+      border-radius: 4px;
+      font-size: 0.76rem;
+      color: #334155;
+      text-decoration: none;
+      font-weight: 600;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .guide-link-item:hover, .guide-link-item:active {
+      background: #f1f5f9;
+      color: var(--blue-btn);
+      border-color: var(--blue-btn);
+    }
+
+    .guide-link-item span.source {
+      font-size: 0.7rem;
+      color: #8b5cf6;
+      background: #f3e8ff;
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-weight: 700;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .btn-fly {
+      flex: 1;
+      padding: 8px 8px;
+      background: #f4eee5;
+      border: 1px solid var(--border-dark);
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--navy);
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .btn-gnav {
+      flex: 1.3;
+      padding: 8px 8px;
+      background: var(--blue-btn);
+      color: #ffffff !important;
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-align: center;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    /* 地圖自訂 Pin */
+    .custom-map-pin {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--navy);
+      color: #ffffff;
+      font-weight: 900;
+      font-size: 12px;
+      border: 2px solid #ffffff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+    }
+
+    .custom-map-pin.hotel-pin {
+      background: #7c3aed;
+    }
+
+    .custom-popup-box h3 {
+      font-family: 'Noto Serif TC', serif;
+      font-size: 0.96rem;
+      color: var(--navy);
+      margin-bottom: 2px;
+    }
+
+    .custom-popup-box .popup-jp {
+      font-size: 0.76rem;
+      color: var(--gold);
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+
+    .custom-popup-box p {
+      font-size: 0.8rem;
+      color: #4a4a4a;
+      line-height: 1.4;
+      margin-bottom: 8px;
+    }
+
+    .popup-gnav-btn {
+      display: block;
+      background: var(--blue-btn);
+      color: #ffffff !important;
+      text-decoration: none;
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    /* 電腦螢幕雙欄響應 */
+    @media (min-width: 900px) {
+      #page-container {
+        flex-direction: row-reverse;
+        height: calc(100vh - 120px);
+      }
+      #map-wrapper {
+        position: relative;
+        top: 0;
+        width: 55%;
+        height: 100%;
+        max-height: none;
+      }
+      #content-panel {
+        width: 45%;
+        height: 100%;
+        overflow-y: auto;
+        border-right: 1px solid var(--border);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 頂部刊頭 -->
+  <header class="header-box">
+    <div class="header-sub-tag">
+      <span class="vol-badge">KANSAI GRAND TOUR 2026</span>
+      <span class="time-badge" id="currentDateBadge">2026.10.24 — 10.29</span>
+    </div>
+    <h1 class="header-title" id="pageTitle">大阪・京都・神戶 6天5夜自由行全景導覽</h1>
+    <p class="header-summary" id="daySummaryText">精緻漫遊導覽：梅田絕景、包車宇治秘境、神戶美學水族、黑門海鮮、環球影城狂歡。</p>
+  </header>
+
+  <!-- 天數分頁列 -->
+  <nav class="day-tabs-bar" id="dayTabBar">
+    <button class="day-tab-btn active" onclick="switchDay(1)">DAY 1 大阪梅田/道頓堀</button>
+    <button class="day-tab-btn" onclick="switchDay(2)">DAY 2 勝尾寺/宇治(包車)</button>
+    <button class="day-tab-btn" onclick="switchDay(3)">DAY 3 神戶水族館/北野</button>
+    <button class="day-tab-btn" onclick="switchDay(4)">DAY 4 黑門/天王寺/阿倍野</button>
+    <button class="day-tab-btn" onclick="switchDay(5)">DAY 5 日本環球影城</button>
+    <button class="day-tab-btn" onclick="switchDay(6)">DAY 6 賦歸高雄</button>
+  </nav>
+
+  <!-- 交通指南折疊手風琴 -->
+  <section class="transit-accordion">
+    <button class="transit-trigger" onclick="toggleTransit()">
+      <span id="transitHeading">🚆 DAY 1 交通轉乘與路線指南</span>
+      <span id="transitIndicator">▼ 點擊展開</span>
+    </button>
+    <div class="transit-details" id="transitDrawer">
+      <!-- 動態載入當天交通指引 -->
+    </div>
+  </section>
+
+  <!-- 主頁面容器 -->
+  <div id="page-container">
+
+    <!-- 地圖視窗 -->
+    <div id="map-wrapper">
+      <div class="layer-selector">
+        <button class="layer-btn active" id="btnLayerStd" onclick="setGsiLayer('std')">標準圖</button>
+        <button class="layer-btn" id="btnLayerPale" onclick="setGsiLayer('pale')">淡色圖</button>
+      </div>
+      <div id="map"></div>
+    </div>
+
+    <!-- 行程內容清單區 -->
+    <div id="content-panel">
+      <main class="timeline-container" id="timelineList"></main>
+    </div>
+
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <script>
+    // 6 天完整資料庫，每個景點皆配置 3 篇專屬網路景點攻略
+    const tripDays = {
+      1: {
+        title: "DAY 1：高雄抵達大阪 ➔ 梅田巡禮 ➔ 道頓堀美食",
+        date: "2026-10-24 (六)",
+        summary: "搭機落地關西機場，包車直達心齋橋公寓式飯店。下午造訪梅田品嚐中庄鰻魚飯、參拜綱敷天神社御旅社，登上藍天大廈空中庭園俯瞰市景，夜晚於道頓堀品嚐千房大阪燒。",
+        transitTips: [
+          {
+            title: "✈️ 機場至市區：包車專車直達 (12:10~12:56)",
+            desc: "入境後搭乘專屬包車直奔心齋橋 Elizabeth Garden 旅館，省去拖行李轉車奔波。"
+          },
+          {
+            title: "🚇 梅田探索：地下鐵御堂筋線",
+            desc: "心齋橋站搭乘御堂筋線直達梅田站（約 6 分鐘）。中庄鰻魚飯、綱敷天神社御旅社與梅田藍天大廈皆可步行串連。"
+          },
+          {
+            title: "🌙 賦歸路線：梅田 ➔ 心齋橋 / 道頓堀",
+            desc: "搭乘地下鐵御堂筋線回心齋橋或難波站，步行前往千房道頓堀店享用晚餐後散步回飯店。"
+          }
+        ],
+        spots: [
+          {
+            id: "d1_airport",
+            name: "關西國際機場 ➔ 出發大阪",
+            jpName: "関西国際空港 (KIX)",
+            time: "07:00 ~ 11:10 (停1H)",
+            lat: 34.4320,
+            lng: 135.2304,
+            desc: "高雄起飛，預計 11:10 落地關西機場第一航廈，迅速辦理通關、提領行李並會合司機。",
+            gmapUrl: "https://www.google.com/maps/search/?api=1&query=Kansai+International+Airport",
+            guides: [
+              { name: "關西機場設施介紹、交通方式、出境前商店街、免稅店攻略", source: "來一球叭噗", url: "https://gototravel.tw/kansai-airport/" },
+              { name: "2026關西機場到大阪市區｜梅田、難波、心齋橋、天王寺交通方式全攻略", source: "精靈漫遊大阪", url: "https://gotoosaka.com/kix-to-osaka/" },
+              { name: "⽇本關西機場必買伴⼿禮推薦指南", source: "bring-you", url: "https://www.bring-you.info/zh-tw/kansia-airport-must-buy-t1" }
+            ]
+          },
+          {
+            id: "d1_hotel1",
+            name: "入住：心齋橋伊莉莎白花園",
+            jpName: "Elizabeth Garden Shinsaibashi",
+            time: "12:10 ~ 12:56 (停30M)",
+            lat: 34.6688,
+            lng: 135.5085,
+            isHotel: true,
+            desc: "包車直接抵達道頓堀旁公寓式旅館辦理寄放行李，稍微整裝後輕鬆出發。",
+            gmapUrl: "https://maps.app.goo.gl/4ePkNZ6JHvZQ5zEX9",
+            guides: [
+              { name: "心齋橋道頓堀大阪平價民宿｜伊莉莎白花園旅居。黑門市場走路1分鐘", source: "痞客幫", url: "https://a606691.pixnet.net/blog/posts/9468141308" },
+              { name: "【2026大阪道頓堀必去攻略】道頓崛必去景點、必吃美食&附近特輯", source: "bring-you", url: "https://www.bring-you.info/zh-tw/dotonbori" },
+              { name: "大阪／難波、日本橋一帶「逛街地圖」", source: "跟著不羈去旅行", url: "https://www.bugi.tw/2017/04/blog-post_14.html" }
+            ]
+          },
+          {
+            id: "d1_lunch",
+            name: "中庄鰻魚飯 (梅田)",
+            jpName: "うなぎ中庄 / 菊川 梅田",
+            time: "13:26 ~ 13:42 (停1H)",
+            lat: 34.7003,
+            lng: 135.4975,
+            desc: "前往梅田享用外皮炭香酥脆、肉質肥嫩的90年老舖關西風碳烤一本鰻料理。",
+            gmapUrl: "https://maps.app.goo.gl/Bvt9wetoYC2tqycv5",
+            guides: [
+              { name: "大阪鰻魚飯15家網路高評價必吃店：中庄與四代目菊川", source: "GOODxSSSS", url: "https://goodxssss.com/top-15-unagi-restaurants-osaka/" },
+              { name: "梅田站直結希爾頓廣場西美食探店：整條一本鰻的極致魅力", source: "香港01", url: "https://www.hk01.com/%E6%97%85%E9%81%8A/60287801/" },
+              { name: "梅田 Yodobashi Tower 餐廳推薦：うなぎの中庄現烤鰻魚", source: "@sophi1_c", url: "https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=&cad=rja&uact=8&ved=2ahUKEwiF1uyr7ceXAxU6s1YBHWRXKXAQFnoECHEQAQ&url=https%3A%2F%2Fwww.threads.com%2F%40sophi1_c%2Fpost%2FDUSi51OETEz%2F%25E5%25A4%25A7%25E9%2598%25AA%25E5%2592%258C%25E4%25BA%25AC%25E9%2583%25BD%25E7%259A%2584%25E8%25A1%258C%25E7%25A8%258B%25E6%258C%2581%25E7%25BA%258C%25E6%259B%25B4%25E6%2596%25B0%25E4%25B8%25AD%25E6%2588%2591%25E8%2587%25AA%25E5%25B7%25B1%25E9%259D%259E%25E5%25B8%25B8%25E6%25BB%25BF%25E6%2584%258F%25E5%25A6%2582%25E6%259E%259C%25E4%25B9%259F%25E6%259C%2589%25E4%25BA%25BA%25E6%259C%2583%25E5%2596%259C%25E6%25AD%25A1%25E5%25B0%25B1%25E5%25A4%25AA%25E5%25A5%25BD%25E4%25BA%2586&usg=AOvVaw1MauQucHkkWLqwF41zNcGJ&opi=89978449" }
+            ]
+          },
+          {
+            id: "d1_shrine",
+            name: "綱敷天神社 御旅社",
+            jpName: "綱敷天神社 御旅社",
+            time: "14:42 ~ 14:51 (停1H)",
+            lat: 34.7042,
+            lng: 135.4996,
+            desc: "【步行約 8 分鐘】隱身在茶屋町熱鬧商圈旁的靜謐神社，梅花紋與祈願御守相當著名。",
+            gmapUrl: "https://maps.app.goo.gl/qXQq5nV1PiENXaKcA",
+            guides: [
+              { name: "綱敷天神社御旅社 Instagram 絕美實境參拜短片", source: "Facebook短影音", url: "https://www.facebook.com/reel/1261870365556420" },
+              { name: "綱敷天神社 御旅社：必收限量哥吉拉御守請領攻略", source: "komi.jian", url: "https://komijian.com/jp-osaka-tsunashiki-tenjinsha-otabisha/" },
+              { name: "2026大阪車站百貨&地下街介紹（阪急、阪神百貨、GRAND FRONT、LUCUA）", source: "bring-you", url: "https://www.bring-you.info/zh-tw/osaka-umeda-shopping" }
+            ]
+          },
+          {
+            id: "d1_sky",
+            name: "梅田藍天大廈 空中庭園展望台",
+            jpName: "梅田スカイビル 空中庭園",
+            time: "15:51 ~ 16:06 (停2H)",
+            lat: 34.7053,
+            lng: 135.4900,
+            desc: "【步行前往】360度露天環狀回廊俯瞰大阪市天際線，黃昏夕陽至夜景華麗轉換。",
+            gmapUrl: "https://maps.app.goo.gl/8yMQqc1ZzUzpCgrf6",
+            guides: [
+              { name: "梅田藍天大廈空中庭園展望台：門票優惠、日落夜景全攻略", source: "Mimi韓旅遊分享", url: "https://mimigo.tw/kuchu-teien/" },
+              { name: "空中庭園必玩7大看點、B1瀧見小路昭和懷舊美食街指南", source: "好運日本行", url: "https://www.gltjp.com/zh-hans/article/item/20441/" },
+              { name: "大阪夕陽百選夜景：梅田藍天大廈頂樓露天迴廊與星光步道", source: "BringYou", url: "https://www.bring-you.info/zh-hans/umeda-sky-building" }
+            ]
+          },
+          {
+            id: "d1_dinner",
+            name: "千房 道頓堀大樓店",
+            jpName: "お好み焼 千房 道頓堀ビル店",
+            time: "18:06 ~ 18:47 (停1H)",
+            lat: 34.6685,
+            lng: 135.5036,
+            desc: "搭乘地下鐵回難波，享用鐵板現煎香氣四溢的大阪燒與炒麵名物。",
+            gmapUrl: "https://maps.app.goo.gl/UaGTp8x5ggv6mbDT8",
+            guides: [
+              { name: "大阪道頓堀美食：千房大阪燒必點道頓堀燒與美味豚平燒", source: "BringYou", url: "https://www.bring-you.info/zh-hans/okonomiyaki-senbo" },
+              { name: "道頓堀8大人氣必吃美食：熱騰騰靈魂大阪燒千房總店推薦", source: "SAVOR JAPAN", url: "https://cn.savorjapan.com/contents/discover-oishii-japan/8-must-eat-famous-foods-in-dotonbori-osaka" },
+              { name: "好吃又有表演看的千房鐵板燒(道頓堀店)", source: "痞客邦", url: "https://mouse1014917.pixnet.net/blog/posts/9450639767" }
+            ]
+          },
+          {
+            id: "d1_return",
+            name: "回飯店休息",
+            jpName: "Elizabeth Garden Shinsaibashi",
+            time: "20:17 ~ 20:27",
+            lat: 34.6688,
+            lng: 135.5085,
+            isHotel: true,
+            desc: "漫步道頓堀沿岸返回飯店，享受第一晚舒適休憩。",
+            gmapUrl: "https://maps.app.goo.gl/4ePkNZ6JHvZQ5zEX9",
+            guides: [
+              { name: "伊麗莎白花園心齋橋", source: "tomarunenosaka", url: "https://tomarunenosaka.com/zh-CN/shisetsu/elizabethgardenshinsaibashi/#access" },
+              { name: "日本超商必買什麼？7-11、Lawson、全家宵夜推薦＋隱藏吃法", source: "jeko-esim", url: "https://www.jeko-esim.com.tw/blog/japan-convenience-store-must-buy-guide/" },
+              { name: "大阪玉出超市，24小時營業的大阪超市", source: "福寶媽", url: "https://gogojp.tw/super-tamade-osaka/" }
+            ]
+          }
+        ]
+      },
+      2: {
+        title: "DAY 2：包車秘境遊 ➔ 勝尾寺 ➔ 箕面 ➔ 宇治平等院 ➔ 任天堂博物館",
+        date: "2026-10-25 (日)",
+        summary: "專屬包車暢遊北攝與宇治！造訪滿山勝運達摩的勝尾寺、箕面瀑布，於LaLaport用餐後前往宇治平等院與辻利抹茶，重頭戲暢玩任天堂博物館，晚餐享用人氣「忍鬨」燒肉。",
+        transitTips: [
+          {
+            title: "🚐 全日包車專車接送",
+            desc: "由心齋橋出發直上高速，免除轉乘巴士麻煩，輕鬆串連箕面山區與京都宇治。"
+          },
+          {
+            title: "⏰ 時間規劃提醒",
+            desc: "16:29 務必準時抵達宇治小倉「任天堂博物館」，入館需事先預約及攜帶 QR code。"
+          },
+          {
+            title: "🥩 晚餐回程：宇治 ➔ 燒肉忍鬨 總本店",
+            desc: "結束任天堂博物館參觀後包車返程大阪市區，直奔長堀橋享受爆汁厚切牛舌。"
+          }
+        ],
+        spots: [
+          {
+            id: "d2_hotel_start",
+            name: "飯店出發 (包車)",
+            jpName: "Elizabeth Garden 出発",
+            time: "08:00 ~ 08:45",
+            lat: 34.6688,
+            lng: 135.5085,
+            isHotel: true,
+            desc: "專屬包車司機飯店樓下集合，直奔北攝箕面名勝。",
+            gmapUrl: "https://maps.app.goo.gl/4ePkNZ6JHvZQ5zEX9",
+            guides: [
+              { name: "關西客制大阪京都包車一日遊", source: "福寶媽", url: "https://gogojp.tw/osaka-chartered-car/" },
+              { name: "勝尾寺＆宇治一日私人包車體驗", source: "Klook", url: "https://www.klook.com/zh-TW/activity/230993-katsuo-ji-temple-uji-full-day-private-experience/" },
+              { name: "大阪包車一日遊", source: "寶寶溫", url: "https://bobowin.blog/osaka-charter/" }
+            ]
+          },
+          {
+            id: "d2_katsuoji",
+            name: "勝尾寺 (必勝祈願・達摩不倒翁)",
+            jpName: "勝運祈願 勝尾寺",
+            time: "08:45 ~ 10:45 (停2H)",
+            lat: 34.8658,
+            lng: 135.4912,
+            desc: "滿山遍野擺滿祈願達摩不倒翁的勝運靈場，秋季紅葉襯托朱紅山門壯麗絕倫。",
+            gmapUrl: "https://maps.app.goo.gl/TUd9b5R5zhSQnDye9",
+            guides: [
+              { name: "勝尾寺完整攻略：達摩御守必收、六十四卦達摩詩籤與許願教學", source: "樂吃購！日本", url: "https://osaka.letsgojp.com/archives/764264/" },
+              { name: "勝尾寺完全指南：參拜路線、勝利達摩棚與四季絕景", source: "好運日本行", url: "https://www.gltjp.com/zh-hans/article/item/21264/" },
+              { name: "大阪近郊勝尾寺參拜全攻略：達摩祈願・集章明信片心得", source: "KKday Blog", url: "https://www.kkday.com/zh-hk/blog/112530/%E5%8B%9D%E5%B0%BE%E5%AF%BA" }
+            ]
+          },
+          {
+            id: "d2_minoh",
+            name: "箕面大瀑布",
+            jpName: "箕面大滝 (Minoh Falls)",
+            time: "10:45 ~ 11:52 (停1H)",
+            lat: 34.8533,
+            lng: 135.4727,
+            desc: "日本瀑布百選之一，沿著溪谷步道森呼吸，品嚐現炸楓葉天婦羅小點。",
+            gmapUrl: "https://maps.app.goo.gl/1g8RJpkbzdJ7JgLF6",
+            guides: [
+              { name: "大阪近郊箕面瀑布半日遊：健行路線與炸楓葉點心推薦", source: "Daily Cheska", url: "https://dailycheska.com/travel/osaka-minoh/" },
+              { name: "2026大阪勝尾寺｜勝尾寺交通與遊覽攻略", source: "funliday", url: "https://www.funliday.com/posts/japan-travel-osaka-katsuo-ji/" },
+              { name: "箕面瀑布，漫步箕面公園森林河谷步道賞楓葉", source: "bring-you", url: "https://www.bring-you.info/zh-tw/meiji-no-mori-mino-park" }
+            ]
+          },
+          {
+            id: "d2_lalaport",
+            name: "LaLaport 吹田 EXPOCITY (午餐休憩)",
+            jpName: "ららぽーと EXPOCITY",
+            time: "11:52 ~ 14:15 (停2H)",
+            lat: 34.8055,
+            lng: 135.5348,
+            desc: "日本最大級複合購物商城，齊聚各式關西人氣美食街與品牌店舖，在此享用午餐。",
+            gmapUrl: "https://www.google.com/maps/search/?api=1&query=LaLaport+EXPOCITY",
+            guides: [
+              { name: "LaLaport EXPOCITY購物中心萬博紀念公園攻略", source: "福寶媽衝日本", url: "https://gogojp.tw/2017-02-27-392/" },
+              { name: "萬博紀念公園旁 LaLaport 超大型商城全攻略", source: "BringYou", url: "https://www.bring-you.info/zh-tw/lalaport-expocity" },
+              { name: "lalaport expocity官方網站", source: "mitsui-shopping-park", url: "https://mitsui-shopping-park.com/tw/lalaport/expocity/info/2402052.html" }
+            ]
+          },
+          {
+            id: "d2_byodoin",
+            name: "宇治 平等院 鳳凰堂",
+            jpName: "世界遺産 平等院",
+            time: "14:15 ~ 15:55 (停1H)",
+            lat: 34.5880,
+            lng: 135.8078,
+            desc: "日幣萬圓大鈔與十圓硬幣上的國寶鳳凰堂，倒映阿字池中的極樂淨土意象。",
+            gmapUrl: "https://maps.app.goo.gl/YnempBBC5aapGBw4A",
+            guides: [
+              { name: "世界遺產宇治平等院全攻略：門票參觀、鳳凰堂內部與鳳翔館", source: "樂吃購！日本", url: "https://osaka.letsgojp.com/archives/893546/" },
+              { name: "京都宇治平等院參拜與表參道散策攻略", source: "BringYou", url: "https://osaka.letsgojp.com/archives/893546/" },
+              { name: "【平等院】漂浮於湖面上的世界遺產，十圓日幣萬圓鈔票都有它", source: "捲捲頭", url: "https://curly.com.tw/byodoin/" }
+            ]
+          },
+          {
+            id: "d2_tsujiri",
+            name: "辻利 宇治本店",
+            jpName: "辻利 宇治本店",
+            time: "15:55 ~ 16:29 (停30M)",
+            lat: 34.5901,
+            lng: 135.8028,
+            desc: "走訪宇治百年抹茶名門老舖，品嚐濃郁道地的宇治抹茶冰淇淋與茶點禮品。",
+            gmapUrl: "https://maps.app.goo.gl/Pxu4VmHjavD1oAFo7",
+            guides: [
+              { name: "京都宇治抹茶名店大評比：辻利宇治本店必買伴手禮與甜點", source: "樂吃購！日本", url: "https://osaka.letsgojp.com/archives/742077/" },
+              { name: "京都宇治觀光必訪！抹茶咖啡廳&伴手禮店「辻利 宇治本店」完整指南", source: "好運日本行", url: "https://www.gltjp.com/zh-hant/article/item/21371/" },
+              { name: "【2026京都宇治一日遊】必訪景點美食＋平等院", source: "marktrip.tw", url: "https://marktrip.tw/kyoto-uji-travel-guide/" }
+            ]
+          },
+          {
+            id: "d2_nintendo",
+            name: "任天堂博物館 (Nintendo Museum)",
+            jpName: "ニンテンドーミュージアム",
+            time: "16:29 ~ 19:09 (停2H30M)",
+            lat: 34.5930,
+            lng: 135.7865,
+            desc: "任天堂歷史與現代遊戲科技結晶！體驗巨型紅白機手把互動、經典展品與限定週邊。",
+            gmapUrl: "https://maps.app.goo.gl/8iHLEH8Tg44Ci1Pn8",
+            guides: [
+              { name: "任天堂博物館超詳細開箱：巨大手把體感、代幣遊玩攻略", source: "4Gamers 實測", url: "https://www.4gamers.com.tw/news/detail/67361/nintendo-museum-onboxing" },
+              { name: "任天堂博物館門票抽選、入館預約流程與限定周邊攻略", source: "美奈子旅行手札", url: "https://minako.tw/nintendo-museum/" },
+              { name: "京都宇治任天堂博物館現場造訪心得與客製化漢堡體驗", source: "巴哈姆特電玩論壇", url: "https://forum.gamer.com.tw/C.php?bsn=60001&snA=52120" }
+            ]
+          },
+          {
+            id: "d2_ninguru",
+            name: "燒肉 忍鬨 總本店",
+            jpName: "焼肉 忍鬨 総本店",
+            time: "19:09 ~ 21:56 (停2H)",
+            lat: 34.6725,
+            lng: 135.5078,
+            desc: "包車返回大阪，享用超人氣招牌包蔥厚切牛舌與極品黑毛和牛燒肉盛宴！",
+            gmapUrl: "https://share.google/PosY00GlqM5kf8Cnz",
+            guides: [
+              { name: "大阪平價燒肉Yakinikuen忍鬨！必吃網美菜單介紹＆預約訂位", source: "tasting-japan", url: "https://tasting-japan.com/archives/7319" },
+              { name: "忍鬨真的好吃耶而且上次去的那家店內幾乎都日本人", source: "@eva05288", url: "https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=&cad=rja&uact=8&ved=2ahUKEwiX59bx-8eXAxVge_UHHVN4JiAQFnoECEIQAQ&url=https%3A%2F%2Fwww.threads.com%2F%40eva05288%2Fpost%2FDXyo-i6kmYY%2F%25E5%25BF%258D%25E9%25AC%25A8%25E7%259C%259F%25E7%259A%2584%25E5%25A5%25BD%25E5%2590%2583%25E8%2580%25B6%25E8%2580%258C%25E4%25B8%2594%25E4%25B8%258A%25E6%25AC%25A1%25E5%258E%25BB%25E7%259A%2584%25E9%2582%25A3%25E5%25AE%25B6%25E5%25BA%2597%25E5%2585%25A7%25E5%25B9%25BE%25E4%25B9%258E%25E9%2583%25BD%25E6%2597%25A5%25E6%259C%25AC%25E4%25BA%25BA&usg=AOvVaw0mV-fmmlbw8F4MDaXPK7R-&opi=89978449" },
+              { name: "心齋橋美食 高CP值和牛燒肉「Yakinikuen忍鬨」 厚切蔥鹽牛舌超過癮", source: "windiewang", url: "https://windiewang.com/2025/02/07/osaka-yakinikuen/" }
+            ]
+          },
+          {
+            id: "d2_return",
+            name: "回飯店休息",
+            jpName: "Elizabeth Garden Shinsaibashi",
+            time: "21:56 ~ 22:05",
+            lat: 34.6688,
+            lng: 135.5085,
+            isHotel: true,
+            desc: "大快朵頤後步行返回飯店，養足精神迎接收穫滿滿的一天。",
+            gmapUrl: "https://maps.app.goo.gl/4ePkNZ6JHvZQ5zEX9",
+            guides: [
+              { name: "心齋橋夜間散策安全路徑", source: "marukojp", url: "https://marukojp.com/osaka-unsafe-areas" },
+              { name: "大阪必買藥妝推薦：SUGI 藥局心齋橋店必買商品10選", source: "osaka.letsgojp", url: "https://osaka.letsgojp.com/archives/579801/" },
+              { name: "2026大阪唐吉訶德購物攻略", source: "mimigo", url: "https://mimigo.tw/dotonbori-donki/" }
+            ]
+          }
+        ]
+      },
+      3: {
+        title: "DAY 3：神戶藝術港灣 ➔ átoa 水族館 ➔ 青斜塔牛排 ➔ 北野異人館",
+        date: "2026-10-26 (一)",
+        summary: "搭乘地下鐵與JR/阪神前往神戶，造訪都市水族藝術 átoa、品嚐由精肉店Nick直營的頂級KOBE青斜塔牛排，午後漫步生田神社與北野異人館歐風洋房，傍晚回大阪享用話題麻婆麵。",
+        transitTips: [
+          {
+            title: "🚆 去程：心齋橋 ➔ 神戶三宮",
+            desc: "搭乘御堂筋線至梅田轉乘 JR 新快速（最速21分抵達三之宮），或自難波搭乘阪神直通特急。"
+          },
+          {
+            title: "🚕 市內短程：三宮 ➔ 青斜塔牛排 (Uber/計程車)",
+            desc: "水族館結束後前往精肉店 Nick 直營之「青斜塔」，搭乘計程車約 8-10 分鐘最省力。"
+          },
+          {
+            title: "🍜 晚餐回程：三宮 ➔ 心齋橋 (Susuruka Susuranka)",
+            desc: "搭乘阪神或JR返回心齋橋，步行前往炙燒起司麻婆麵名店享用熱騰騰濃郁晚餐。"
+          }
+        ],
+        spots: [
+          {
+            id: "d3_start",
+            name: "飯店出發 ➔ 前往神戶",
+            jpName: "心斎橋 ➔ 神戸三宮",
+            time: "09:00 ~ 10:20 (移動)",
+            lat: 34.6688,
+            lng: 135.5085,
+            isHotel: true,
+            desc: "由心齋橋出發搭電車前往神戶三宮，轉乘 Port Loop 或步行直達 átoa 水族館。",
+            gmapUrl: "https://maps.app.goo.gl/4ePkNZ6JHvZQ5zEX9",
+            guides: [
+              { name: "大阪到神戶交通方式總整理", source: "小氣少年", url: "https://nicklee.tw/1024/osaka-to-kobe/" },
+              { name: "神戶交通指南", source: "好運日本行", url: "https://www.gltjp.com/zh-hant/article/item/20998/" },
+              { name: "神戶一日遊神級行程地圖（方案A/B切換）", source: "Kobe Tour 地圖", url: "https://hgj32kimo-blip.github.io/my-japan-travel-website/Kobe_tour.html" }
+            ]
+          },
+          {
+            id: "d3_atoa",
+            name: "神戶 átoa 水族館",
+            jpName: "AQUARIUM × ART átoa",
+            time: "10:20 ~ 12:20 (停2H)",
+            lat: 34.6832,
+            lng: 135.1936,
+            desc: "融合水族世界與數位當代藝術，漫步夢幻球體水槽 AQUA TERRA 與和風光雕劇場。",
+            gmapUrl: "https://maps.app.goo.gl/oGjKD2jVqWthdzpK9",
+            guides: [
+              { name: "神戶劇場型水族館 átoa：結合藝術與海洋美學的奇幻空間", source: "好運日本行", url: "https://www.gltjp.com/zh-hans/directory/item/16100/" },
+              { name: "átoa 水族館繁體中文官網：展區亮點、餵食秀與購票預約", source: "átoa 官方中文", url: "https://zh-tw.atoa-kobe.jp/" },
+              { name: "神戶átoa 水族館：雨天避暑首選！日本最大球體水槽", source: "marukoblog", url: "https://marukoblog.tw/atoa.html" }
+            ]
+          },
+          {
+            id: "d3_steak",
+            name: "午餐：KOBE STEAK 青斜塔",
+            jpName: "青斜塔 by 精肉店Nick",
+            time: "12:20 ~ 14:29 (停2H)",
+            lat: 34.6937,
+            lng: 135.1878,
+            desc: "【Uber 短程接駁】老牌精肉店 Nick 親自操刀，極致細嫩的神戶和牛夏多布里昂鐵板料理。",
+            gmapUrl: "https://share.google/Dj5aRK3gIE3DkKmwp",
+            guides: [
+              { name: "KOBE STEAK 青斜塔 Google 官方菜單與推薦套餐分享", source: "Google分享特輯", url: "https://share.google/Dj5aRK3gIE3DkKmwp" },
+              { name: "【2026神戶牛】5家好評神戶牛餐廳", source: "V妞的旅行", url: "https://vivianexplore.tw/kobe-beef/" },
+              { name: "精肉店直營神戶牛：KOBE STEAK 青斜塔職人煎烤評鑑", source: "Tabelog 食べログ", url: "https://tabelog.com/hyogo/A2801/A280101/28062831/" }
+            ]
+          },
+          {
+            id: "d3_ikuta",
+            name: "生田神社 (結緣與流水占卜)",
+            jpName: "生田神社 (Ikuta Jinja)",
+            time: "14:29 ~ 15:35 (停1H)",
+            lat: 34.6948,
+            lng: 135.1906,
+            desc: "【步行前往】神戶地名開基淵源所在，穿過朱紅鳥居於後殿生田之森體驗水浸占卜籤詩。",
+            gmapUrl: "https://maps.app.goo.gl/sCb7MaiQFP3HzMkF8",
+            guides: [
+              { name: "神戶生田神社參拜攻略：求姻緣結緣、生田之森流水占卜教學", source: "樂吃購！日本", url: "https://osaka.letsgojp.cn/archives/87168/" },
+              { name: "神戶「生田神社」9月超唯美御朱印登場", source: "livejapan", url: "https://livejapan.com/zh-tw/in-kansai/in-pref-hyogo/in-kobe_sannomiya_kitano/article-a2001057/" },
+              { name: "生田神社金龍泉水占卜體驗：神戶戀愛結緣第一能量景點", source: "BringYou", url: "https://www.bring-you.info/zh-tw/ikuta-jinja" }
+            ]
+          },
+          {
+            id: "d3_kitano",
+            name: "北野異人館街",
+            jpName: "北野異人館街 (風見鶏の館)",
+            time: "15:35 ~ 16:46 (停1H)",
+            lat: 34.7011,
+            lng: 135.1898,
+            desc: "漫步歐風坡道，走訪紅磚風向雞之館、萌黃之館與登錄有形文化財的洋館星巴克。",
+            gmapUrl: "https://maps.app.goo.gl/8CisFVH77QAQWZqo7",
+            guides: [
+              { name: "神戶北野異人館街散步攻略：洋風古蹟建築群與風見雞館必看", source: "樂吃購！日本", url: "https://osaka.letsgojp.com/archives/80182/" },
+              { name: "走進異國神戶童話：北野異人館街散策、萌黃之館與洋房星巴克", source: "GO TO TRAVEL 走走旅行", url: "https://gototravel.tw/kobe-kitano-ijinkan/" },
+              { name: "神戶景點精選指南：北野天滿神社眺望與必買風見雞伴手禮", source: "波比旅遊日誌", url: "https://bobbytravel.tw/kobe/" }
+            ]
+          },
+          {
+            id: "d3_dinner",
+            name: "Susuruka Susuranka 心齋橋店",
+            jpName: "すするか、すすらんか。 心斎橋店",
+            time: "16:46 ~ 18:40 (停1H)",
+            lat: 34.6732,
+            lng: 135.5028,
+            desc: "返回心齋橋！品嚐 Instagram 超人氣「炙燒起司麻婆豆腐麵」，濃郁香辣滋味。",
+            gmapUrl: "https://maps.app.goo.gl/vhNAU88CDk3sUZVF9",
+            guides: [
+              { name: "心齋橋排隊名店：炙燒起司麻婆豆腐麵すするか、すすらんか食記", source: "食べログ Tabelog", url: "https://tabelog.com/osaka/A2701/A270201/27138402/" },
+              { name: "大阪話題拉麵：奈良名物麻婆麵進軍心齋橋爆紅開箱", source: "FB熱門美食", url: "https://www.facebook.com/watch/?v=998575809216999" },
+              { name: "2026年大阪宵夜餐廳推薦10選", source: "食探日本", url: "https://tasting-japan.com/archives/4234" }
+            ]
+          },
+          {
+            id: "d3_free",
+            name: "心齋橋・道頓堀自由購物",
+            jpName: "心斎橋筋・アメリカ村",
+            time: "18:40 ~ 自由時間",
+            lat: 34.6710,
+            lng: 135.5015,
+            desc: "自由穿梭藥妝店、美國村服飾商場採購，隨後步行返回飯店休息。",
+            gmapUrl: "https://maps.app.goo.gl/4ePkNZ6JHvZQ5zEX9",
+            guides: [
+              { name: "【2026心齋橋攻略】最強逛街地圖", source: "波比看世界", url: "https://bobbytravel.tw/shinsaibashi/" },
+              { name: "大阪美國村必逛必買指南", source: "BringYou", url: "https://www.bring-you.info/zh-tw/american-village-osaka" },
+              { name: "日本最新免稅退稅制度說明與退稅教學", source: "Kklook", url: "https://www.klook.com/zh-TW/blog/japan-tax-refund/" }
+            ]
+          }
+        ]
+      },
+      4: {
+        title: "DAY 4：黑門市場海鮮 ➔ 天王寺阿倍野 ➔ 換飯店至環球影城",
+        date: "2026-10-27 (二)",
+        summary: "早晨悠閒逛黑門市場嚐鮮，造訪萌感十足的貓頭鷹咖啡、天王寺動物園與元祖達摩串炸；下午登上日本第一高樓阿倍野 HARUKAS 300 俯瞰絕景，傍晚換飯店入住環球東方飯店。",
+        transitTips: [
+          {
+            title: "🚶 晨間散步：飯店 ➔ 黑門市場",
+            desc: "自心齋橋伊莉莎白花園步行約 10-12 分鐘即可直抵黑門市場入口。"
+          },
+          {
+            title: "🚇 市區串連：地下鐵御堂筋線 / 堺筋線",
+            desc: "動物園前站、天王寺站及阿倍野站相連，回程可搭乘至心齋橋取回行李。"
+          },
+          {
+            title: "🚆 轉點入住：市區 ➔ JR 環球影城站 (20:53~21:25)",
+            desc: "搭乘地下鐵至西九條站轉乘 JR 櫻島線直達「ユニバーサルシティ駅」，出站 1 分鐘即抵達環球東方飯店！"
+          }
+        ],
+        spots: [
+          {
+            id: "d4_kuromon",
+            name: "黑門市場 (海鮮・和牛探店)",
+            jpName: "黒門市場 (Kuromon Market)",
+            time: "10:00 ~ 12:12 (停2H)",
+            lat: 34.6653,
+            lng: 135.5068,
+            desc: "大阪的大廚房！現烤巨無霸扇貝、海膽、黑毛和牛串與新鮮草莓大福。",
+            gmapUrl: "https://maps.app.goo.gl/6vj7HLCe6o7v4KJ66",
+            guides: [
+              { name: "黑門市場必吃美食攻略：黑門三平海鮮、黑銀鮪魚與烤扇貝地圖", source: "BringYou", url: "https://www.bring-you.info/zh-hans/kuromon-ichiba-market" },
+              { name: "2026黑門市場攻略", source: "波比看世界", url: "https://bobbytravel.tw/kuromon-market/" },
+              { name: "黑門市場生鮮美食攻略", source: "Meme韓", url: "https://mimigo.tw/kuromon-market/" }
+            ]
+          },
+          {
+            id: "d4_owl",
+            name: "貓頭鷹咖啡館 Chouette",
+            jpName: "フクロウのみせ Chouette",
+            time: "12:12 ~ 13:19 (停1H)",
+            lat: 34.6756,
+            lng: 135.5048,
+            desc: "【地鐵移動】近距離與溫馴可愛的各品種貓頭鷹互動親近、拍照療癒時光。",
+            gmapUrl: "https://maps.app.goo.gl/nqY1YMBC8Jyqmf5ZA",
+            guides: [
+              { name: "心齋橋 Chouette 貓頭鷹咖啡館門票預約", source: "tablecheck.com", url: "https://www.tablecheck.com/zh-TW/shops/owlcafe-chouette/reserve" },
+              { name: "大阪必訪貓頭鷹咖啡廳Chouette完整攻略", source: "plumpyblog", url: "https://plumpyblog.com/japan-osaka-owlcafe-chouette/" },
+              { name: "貓頭鷹咖啡館 Chouette 官網與注意事項說明", source: "Chouette 公式", url: "https://chouette1.jp/chinese/" }
+            ]
+          },
+          {
+            id: "d4_zoo",
+            name: "天王寺動物園",
+            jpName: "天王寺動物園 (Tennoji Zoo)",
+            time: "13:19 ~ 16:07 (停2H30M)",
+            lat: 34.6508,
+            lng: 135.5084,
+            desc: "擁有百年歷史的生態型動物園，探訪北極熊、長頸鹿及非洲熱帶草原動物區。",
+            gmapUrl: "https://maps.app.goo.gl/BvArB44zjUPBWYzT8",
+            guides: [
+              { name: "天王寺動物園開園110年完全指南：北極熊餵食秀、門票與推薦路線", source: "樂吃購！日本", url: "https://osaka.letsgojp.com/archives/877246/" },
+              { name: "大阪天王寺動物園：北極熊跳水秀、超可愛小熊貓與周邊景點", source: "Mimi韓旅遊分享", url: "https://mimigo.tw/osaka-zoo/" },
+              { name: "天王寺動物園完整指南", source: "好運日本行", url: "https://www.gltjp.com/zh-hant/article/item/20382/" }
+            ]
+          },
+          {
+            id: "d4_kushikatsu",
+            name: "元祖串炸 達摩 (新世界通天閣)",
+            jpName: "元祖串かつ だるま",
+            time: "16:07 ~ 17:12 (停1H)",
+            lat: 34.6517,
+            lng: 135.5060,
+            desc: "新世界靈魂名物！酥脆不油膩的炸串沾上秘傳甘醇醬汁，配爽口高麗菜最對味。",
+            gmapUrl: "https://maps.app.goo.gl/2aD7SEGLzPRCf2YT8",
+            guides: [
+              { name: "大阪新世界元祖串炸：通天閣旁", source: "Meme韓", url: "https://mimigo.tw/kushikatu-daruma/" },
+              { name: "大阪新世界完整指南", source: "好運日本行", url: "https://www.gltjp.com/zh-hant/article/item/20420/" },
+              { name: "大阪必吃美食達摩串炸（串かつだるま）菜單與套餐全評測", source: "PTT BBS", url: "https://www.ptt.cc/bbs/Food/M.1705312361.A.D24.html" }
+            ]
+          },
+          {
+            id: "d4_harukas",
+            name: "阿倍野 HARUKAS 300 展望台",
+            jpName: "あべのハルカス 300",
+            time: "17:12 ~ 18:53 (停1.5H)",
+            lat: 34.6458,
+            lng: 135.5139,
+            desc: "登上 300 公尺高空透明落地窗展望台，欣賞夕陽漸沉、萬家燈火璀璨大阪全景。",
+            gmapUrl: "https://maps.app.goo.gl/QpkUUm4Ec7zJGfzW8",
+            guides: [
+              { name: "阿倍野 HARUKAS 300 展望台門票、交通、魔幻夕陽夜景完整攻略", source: "樂吃購！日本", url: "https://osaka.letsgojp.com/archives/525958/" },
+              { name: "海闊天空展望台（HARUKAS 300）中文官方設施導覽與亮點看點", source: "阿倍野官方繁中", url: "https://www.abenoharukas-300.jp/tc/observatory/guide.html" },
+              { name: "阿倍野展望台5大特色完整攻略", source: "travel contents", url: "https://travelcontentsapp.com/guide/osaka/b592/" }
+            ]
+          },
+          {
+            id: "d4_shopping",
+            name: "天王寺・阿倍野商圈逛街",
+            jpName: "天王寺ミオ・近鉄百貨店",
+            time: "18:53 ~ 20:53 (停2H)",
+            lat: 34.6465,
+            lng: 135.5145,
+            desc: "近鐵百貨阿倍野海闊天空總店與 Q's Mall 逛街購物，採買伴手禮並領取行李。",
+            gmapUrl: "https://www.google.com/maps/search/?api=1&query=Abeno+Harukas+Kintetsu",
+            guides: [
+              { name: "天王寺近鐵百貨阿倍野總店血拼全攻略", source: "bring-you", url: "https://www.bring-you.info/zh-tw/kintetsu-abeno-harukas-tenoji-ku-street" },
+              { name: "阿倍野 Q's Mall 大型購物中心名店、Ito-Yokado 超市採買指南", source: "gogojp.tw", url: "https://gogojp.tw/2017-02-04-52/" },
+              { name: "大阪天王寺景點地圖：必去景點、推薦美食指南", source: "樂吃購!日本", url: "https://osaka.letsgojp.com/archives/700553/" }
+            ]
+          },
+          {
+            id: "d4_hotel2",
+            name: "入住：環球東方飯店",
+            jpName: "オリエンタルホテル ユニバーサル・シティ",
+            time: "20:53 ~ 21:25",
+            lat: 34.6689,
+            lng: 135.4379,
+            isHotel: true,
+            desc: "搭乘 JR 抵達環球影城站！出站 1 分鐘入住 USJ 官方合作飯店，為明日環球做足準備。",
+            gmapUrl: "https://maps.app.goo.gl/125bML4jhbr2KxVw6",
+            guides: [
+              { name: "（Oriental Hotel Universal City）大阪環球影城東方飯店開箱體驗", source: "娜塔蝦", url: "https://natasha-traveler.tw/osaka-oriental-hotels-review/" },
+              { name: "【2026環球影城住宿】USJ走路1分鐘！Top14環球影城飯店", source: "波比看世界", url: "https://bobbytravel.tw/usj-hotels/" },
+              { name: "環球影城東方酒店Oriental Hotel Universal City，全新改裝全覽", source: "寶寶溫", url: "https://bobowin.blog/oriental-hotel-universal-city/" }
+            ]
+          }
+        ]
+      },
+      5: {
+        title: "DAY 5：日本環球影城 (USJ) 全日狂歡玩透透",
+        date: "2026-10-28 (三)",
+        summary: "全天全心沉浸日本環球影城！清晨07:00即刻出發提早入園卡位，任天堂瑪利歐園區、哈利波特魔法世界、小小兵樂園玩翻天，夜宿環球東方飯店。",
+        transitTips: [
+          {
+            title: "🚶 步行即達樂園大門",
+            desc: "入住「環球東方飯店」出飯店穿過 Universal Citywalk 步行 2~3 分鐘直抵 USJ 售票口，具備絕對先機！"
+          },
+          {
+            title: "⚡ 快速通關與提早入園攻略",
+            desc: "建議 06:45 前下樓排隊入園，第一時間開啟 USJ APP 抽整理券或衝往瑪利歐超級任天堂世界。"
+          }
+        ],
+        spots: [
+          {
+            id: "d5_depart",
+            name: "飯店出發 ➔ 提早衝入園",
+            jpName: "オリエンタルホテル 出発",
+            time: "07:00 出發",
+            lat: 34.6689,
+            lng: 135.4379,
+            isHotel: true,
+            desc: "步出飯店直接前往入園排隊動線，搶先進入園區熱門設施！",
+            gmapUrl: "https://maps.app.goo.gl/125bML4jhbr2KxVw6",
+            guides: [
+              { name: "日本環球影城開園前提早排隊與入園動線神級搶位攻略", source: "KKday Blog", url: "https://www.kkday.com/zh-tw/blog/30903/asia-japan-universal-studio-guide" },
+              { name: "大阪環球影城USJ APP教學2026｜門票綁定、整理券怎麼抽、地圖/等待時間查詢", source: "（來一球叭噗）gototravel.tw", url: "https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=&ved=2ahUKEwidps-J28eXAxUrslYBHYWhOmYQFnoECCIQAQ&url=https%3A%2F%2Fgototravel.tw%2Fusj-app%2F&usg=AOvVaw1D2xaIdLoicL-KHCtG5QRR&opi=89978449" },
+              { name: "【2026最新】日本大阪環球影城USJ 行前必看攻略教學", source: "tianmint", url: "https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=&ved=2ahUKEwiOnLiD2seXAxX4slYBHahrESQQFnoECDQQAQ&url=https%3A%2F%2Ftianmint.com%2Fusj-travel-guide%2F&usg=AOvVaw0TmQw1Ncrjvfn230GGsTXk&opi=89978449" }
+            ]
+          },
+          {
+            id: "d5_usj",
+            name: "日本環球影城 (USJ)",
+            jpName: "ユニバーサル・スタジオ・ジャパン",
+            time: "全日狂歡 (~ 21:00)",
+            lat: 34.6654,
+            lng: 135.4323,
+            desc: "瑪利歐賽車庫巴挑戰、哈利波特禁忌之旅、飛天翼龍與夜晚精彩萬聖/點燈主題秀！",
+            gmapUrl: "https://www.google.com/maps/search/?api=1&query=Universal+Studios+Japan",
+            guides: [
+              { name: "日本環球影城全攻略：門票、快速通關、超級任天堂世界必玩", source: "KKday", url: "https://www.kkday.com/zh-tw/blog/30903/asia-japan-universal-studio-guide" },
+              { name: "USJ一日玩遍19個熱門設施超強技巧：單人通道與APP整理券", source: "TCL 旅行指南", url: "https://st.tcymca.org.tw/information/%E3%80%90%E5%A4%A7%E9%98%AA%E6%87%B6%E4%BA%BA%E5%8C%85%E3%80%91%E5%A4%A7%E9%98%AA%E7%92%B0%E7%90%83%E5%BD%B1%E5%9F%8EUSJ%E6%94%BB%E7%95%A5%E2%80%A6%E5%B8%B6%E4%BD%A0%E4%B8%80%E5%A4%A9%E7%8E%A9%E9%81%8D19%E5%80%8B%E9%A0%85%E7%9B%AE(%E6%B2%92%E6%9C%89%E5%BF%AB%E9%80%9F%E9%80%9A%E9%97%9C)%E5%BF%85%E7%9C%8B.html" },
+              { name: "大阪環球影城超級任天堂世界攻略|必玩瑪利歐設施、商品美食、地圖", source: "來一球叭噗", url: "https://gototravel.tw/usj-super-nintendo-world/" }
+            ]
+          },
+          {
+            id: "d5_citywalk",
+            name: "Universal Citywalk / 回飯店",
+            jpName: "ユニバーサル・シティウォーク大阪",
+            time: "21:00 ~ 回飯店休息",
+            lat: 34.6689,
+            lng: 135.4379,
+            isHotel: true,
+            desc: "閉園後於步行街採購週邊伴手禮、享用宵夜拉麵，步行 1 分鐘回房享受腿部放鬆按摩。",
+            gmapUrl: "https://maps.app.goo.gl/125bML4jhbr2KxVw6",
+            guides: [
+              { name: "【UNIVERSAL CITYWALK大阪】介紹推介美食和商店！", source: "we-love-osaka-ch-han.com", url: "https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=&ved=2ahUKEwjOxvjk3MeXAxWyklYBHUbyEaYQFnoECEMQAQ&url=https%3A%2F%2Fwe-love-osaka-ch-han.com%2Fcitywalk%2F&usg=AOvVaw1d7r3MrWtWxjVUxlmI6w9T&opi=89978449" },
+              { name: "【2026大阪環球影城必買】Top50最夯清單！小物、紀念品、零食、吊飾全攻略", source: "波比看世界", url: "https://bobbytravel.tw/usj-souvenir/" },
+              { name: "環球影城東方酒店Oriental Hotel Universal City，全新改裝", source: "寶寶溫", url: "https://bobowin.blog/oriental-hotel-universal-city/" }
+            ]
+          }
+        ]
+      },
+      6: {
+        title: "DAY 6：晨光慢活 ➔ 前往關西機場 ➔ 賦歸高雄",
+        date: "2026-10-29 (四)",
+        summary: "享受飯店豐盛現榨果汁與早餐，辦理退房手續；搭乘 JR 或利木津巴士直達關西國際機場，免稅店採買伴手禮後搭機平安返回高雄溫暖的家。",
+        transitTips: [
+          {
+            title: "🚌 機場交通方式推薦",
+            desc: "① 飯店前搭乘利木津直達巴士（約 70 分）直抵關西機場，免搬行李最舒適。<br>② 搭乘 JR 櫻島線至西九條轉乘關空快速或新今宮轉南海特急 Rapi:t。"
+          },
+          {
+            title: "✈️ 機場報到",
+            desc: "國際線航班請提早 2.5 至 3 小時抵達關西機場辦理報到與出境退稅手續。"
+          }
+        ],
+        spots: [
+          {
+            id: "d6_hotel",
+            name: "環球東方飯店 (退房與享用早餐)",
+            jpName: "オリエンタルホテル 退室",
+            time: "09:00 ~ 10:30",
+            lat: 34.6689,
+            lng: 135.4379,
+            isHotel: true,
+            desc: "享用飯店備受好評的經典早餐與自製漢堡，悠閒辦理退房手續。",
+            gmapUrl: "https://maps.app.goo.gl/125bML4jhbr2KxVw6",
+            guides: [
+              { name: "環球東方飯店早餐", source: "官方網站", url: "https://ct.universalcity.oriental-hotels.com/restaurant/" },
+              { name: "大阪環球影城到關西機場指南", source: "lazyjapan", url: "https://lazyjapan.com/regions/osaka/transport/airport/from-usj.html" },
+              { name: "最後半日悠閒時光：櫻島港灣沿線天保山/大阪港區海遊館放鬆地圖", source: "komijian", url: "https://komijian.com/jp-osaka-tempozan/" }
+            ]
+          },
+          {
+            id: "d6_kix",
+            name: "關西國際機場 (KIX) ➔ 高雄 (KHH)",
+            jpName: "関西国際空港 免税店・帰国",
+            time: "11:30 ~ 登機返國",
+            lat: 34.4320,
+            lng: 135.2304,
+            desc: "抵達關西機場，最後巡禮免稅店採購各式生巧克力與和菓子，滿載回憶起飛回高雄！",
+            gmapUrl: "https://www.google.com/maps/search/?api=1&query=Kansai+International+Airport",
+            guides: [
+              { name: "關西機場第一航廈最新整修亮點：國際線免稅店血拼全攻略", source: "關西機場官網", url: "https://platinumaps.jp/maps/kix-airport/@34.4344716,135.2450053,19.34z?bearing=140.87&floor=2F&gm=213&area=32&culture=zh-tw&_fsi=mbW9kHMI" },
+              { name: "2026關西機場完全解析", source: "樂吃購！日本", url: "https://osaka.letsgojp.com/archives/696939/" },
+              { name: "【關西機場伴手禮】2026關西機場必買清單", source: "vivianexplore", url: "https://vivianexplore.tw/kansai-airport-souvenir/" }
+            ]
+          }
+        ]
+      }
+    };
+
+    let currentDay = 1;
+    let map = null;
+    let markersLayer = null;
+    let routePolyline = null;
+    let currentGsiTileLayer = null;
+    let currentTileType = 'std';
+    let spotMarkers = {};
+
+    const GSI_TILES = {
+      std: "https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png",
+      pale: "https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png"
+    };
+
+    function initMap() {
+      map = L.map('map', {
+        center: [34.6937, 135.5023],
+        zoom: 12,
+        zoomControl: true,
+        scrollWheelZoom: false,
+        attributionControl: true
+      });
+
+      currentGsiTileLayer = L.tileLayer(GSI_TILES.std, {
+        maxZoom: 18,
+        minZoom: 8,
+        attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">日本國土地理院 (GSI)</a>'
+      }).addTo(map);
+
+      markersLayer = L.layerGroup().addTo(map);
+
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 250);
+
+      window.addEventListener('resize', () => {
+        if (map) map.invalidateSize();
+      });
+
+      renderDay(currentDay);
+    }
+
+    function setGsiLayer(type) {
+      if (currentTileType === type) return;
+      currentTileType = type;
+
+      document.getElementById('btnLayerStd').classList.toggle('active', type === 'std');
+      document.getElementById('btnLayerPale').classList.toggle('active', type === 'pale');
+
+      if (currentGsiTileLayer) {
+        map.removeLayer(currentGsiTileLayer);
+      }
+
+      currentGsiTileLayer = L.tileLayer(GSI_TILES[type], {
+        maxZoom: 18,
+        minZoom: 8,
+        attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">日本國土地理院 (GSI)</a>'
+      }).addTo(map);
+    }
+
+    function toggleTransit() {
+      const drawer = document.getElementById('transitDrawer');
+      const indicator = document.getElementById('transitIndicator');
+      const isOpen = drawer.classList.contains('open');
+      
+      if (isOpen) {
+        drawer.classList.remove('open');
+        indicator.textContent = '▼ 點擊展開';
+      } else {
+        drawer.classList.add('open');
+        indicator.textContent = '▲ 收合內容';
+      }
+    }
+
+    function switchDay(dayNum) {
+      currentDay = dayNum;
+      
+      const buttons = document.querySelectorAll('.day-tab-btn');
+      buttons.forEach((btn, idx) => {
+        btn.classList.toggle('active', idx + 1 === dayNum);
+      });
+
+      renderDay(dayNum);
+    }
+
+    function createCustomPin(order, isHotel) {
+      return L.divIcon({
+        className: 'custom-leaflet-icon',
+        html: `<div class="custom-map-pin ${isHotel ? 'hotel-pin' : ''}">${isHotel ? '🏨' : order}</div>`,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+        popupAnchor: [0, -15]
+      });
+    }
+
+    function renderDay(dayNum) {
+      const dayData = tripDays[dayNum];
+      if (!dayData) return;
+
+      document.getElementById('currentDateBadge').textContent = dayData.date;
+      document.getElementById('pageTitle').textContent = dayData.title;
+      document.getElementById('daySummaryText').textContent = dayData.summary;
+      document.getElementById('transitHeading').textContent = `🚆 DAY ${dayNum} 交通轉乘與路線指南`;
+
+      const transitDrawer = document.getElementById('transitDrawer');
+      transitDrawer.innerHTML = dayData.transitTips.map(t => `
+        <div class="transit-route-box">
+          <div class="transit-title">${t.title}</div>
+          <div>${t.desc}</div>
+        </div>
+      `).join('');
+
+      markersLayer.clearLayers();
+      if (routePolyline) {
+        map.removeLayer(routePolyline);
+      }
+      spotMarkers = {};
+
+      const timelineEl = document.getElementById('timelineList');
+      timelineEl.innerHTML = '';
+
+      const overviewCard = document.createElement('div');
+      overviewCard.className = 'day-overview-card';
+      overviewCard.innerHTML = `<strong>本日亮點：</strong>${dayData.summary}`;
+      timelineEl.appendChild(overviewCard);
+
+      const latlngs = [];
+      const bounds = [];
+
+      dayData.spots.forEach((spot, idx) => {
+        const orderNum = idx + 1;
+        const latlng = [spot.lat, spot.lng];
+        latlngs.push(latlng);
+        bounds.push(latlng);
+
+        const marker = L.marker(latlng, {
+          icon: createCustomPin(orderNum, spot.isHotel)
+        });
+
+        const popupHtml = `
+          <div class="custom-popup-box">
+            <h3>${orderNum}. ${spot.name}</h3>
+            <div class="popup-jp">${spot.jpName}</div>
+            <p>${spot.desc}</p>
+            <a href="${spot.gmapUrl}" target="_blank" rel="noopener" class="popup-gnav-btn">
+              🗺️ 開啟 Google 地圖導航
+            </a>
+          </div>
+        `;
+        marker.bindPopup(popupHtml);
+        markersLayer.addLayer(marker);
+        spotMarkers[spot.id] = marker;
+
+        // 行程卡片
+        const card = document.createElement('div');
+        card.className = 'trip-card';
+        card.id = `card-${spot.id}`;
+
+        // 建立 3 篇網路攻略 HTML 模組
+        let guidesHtml = '';
+        if (spot.guides && spot.guides.length > 0) {
+          guidesHtml = `
+            <div class="guides-box">
+              <div class="guides-title">📖 精選 3 篇推薦攻略指南：</div>
+              <div class="guides-list">
+                ${spot.guides.map((g, gIdx) => `
+                  <a href="${g.url}" target="_blank" rel="noopener" class="guide-link-item" onclick="event.stopPropagation()">
+                    <span>${gIdx + 1}. ${g.name}</span>
+                    <span class="source">${g.source}</span>
+                  </a>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        }
+
+        card.innerHTML = `
+          <div class="card-meta">
+            <div>
+              <span class="step-badge">${orderNum}</span>
+              <span class="step-time">${spot.time}</span>
+            </div>
+            <span class="plan-tag">${spot.isHotel ? '住宿飯店' : '行程重點'}</span>
+          </div>
+          <div class="card-title">${spot.name}</div>
+          <div class="card-jp">${spot.jpName}</div>
+          <div class="card-desc">${spot.desc}</div>
+          ${guidesHtml}
+          <div class="card-actions">
+            <button class="btn-fly" onclick="focusSpot('${spot.id}', event)">🎯 定位地圖</button>
+            <a class="btn-gnav" href="${spot.gmapUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation()">
+              📍 Google 導航
+            </a>
+          </div>
+        `;
+
+        card.onclick = () => focusSpot(spot.id);
+        timelineEl.appendChild(card);
+      });
+
+      if (latlngs.length > 1) {
+        routePolyline = L.polyline(latlngs, {
+          color: '#c94a29',
+          weight: 3.5,
+          opacity: 0.85,
+          dashArray: '6, 8'
+        }).addTo(map);
+      }
+
+      if (bounds.length > 0) {
+        map.fitBounds(bounds, { padding: [35, 35], maxZoom: 15 });
+      }
+
+      window.focusSpot = function(spotId, evt) {
+        if (evt) evt.stopPropagation();
+        const targetSpot = dayData.spots.find(s => s.id === spotId);
+        const targetMarker = spotMarkers[spotId];
+        if (!targetSpot || !targetMarker) return;
+
+        document.querySelectorAll('.trip-card').forEach(c => c.classList.remove('active-spot'));
+        const activeCard = document.getElementById(`card-${spotId}`);
+        if (activeCard) {
+          activeCard.classList.add('active-spot');
+        }
+
+        map.flyTo([targetSpot.lat, targetSpot.lng], 15, { duration: 0.8 });
+        setTimeout(() => {
+          targetMarker.openPopup();
+        }, 750);
+      };
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initMap();
+    });
+  </script>
+</body>
+</html>
